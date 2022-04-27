@@ -33,14 +33,10 @@ end
 ts_list = unique(ts_list_unique);
 ts_list = ts_list(2:end);
 triggers_CGX30([ts_list]) = 1;
-
 all_mobilab_streams{1,3}.data(:,31) = triggers_CGX30;
+ all_mobilab_streams{1,3}.label(31) = {'trigger'};
+ all_mobilab_streams{1,3}.channelSpace == NaN(31,3);
 
-% CGX32
-all_mobilab_streams{1,3}.data(:,31) = all_mobilab_streams{1,3}.auxChannel.data(:,4);
+% sync 2 eeg streams and markers
+exported_EEG = mobilab.allStreams().export2eeglab([1,3],[2]);
 
-
-exported_EEG = mobilab.allStreams().export2eeglab([1,3]);
-exported_EEG.data(:, any(isnan(exported_EEG.data),1)) = [];
-exported_EEG.pnts = size(exported_EEG.data,2);
-exported_EEG.times = exported_EEG.times(1:size(exported_EEG.data,2));
