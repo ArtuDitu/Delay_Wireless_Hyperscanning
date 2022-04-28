@@ -96,14 +96,27 @@ eegplot(exported_EEG.data,'srate',exported_EEG.srate,'eloc_file',exported_EEG.ch
 
 %% Step 1 - look at triggers latency in CGX32 - data collected via LSL and wireless local network
 
-% compare amount of events
-% triggers send == 596
+% compare amount of events before synchronizing LSL streams
+d = d(2:end);
+d{:,1}=d{:,1}+1;
+size(d,1)
+% triggers sent == 595
 
-% triggers received == 
+% triggers before LSL sync
+CGX32_count= 0;
+CGXX32_markers = all_mobilab_streams{1,2};
+for event =1:length(CGXX32_markers.event.label)
+    if strcmp('<Marker><Type>Comment</Type><Description>M 32768<', CGXX32_markers.event.label{event,1})
+        CGX32_count = CGX32_count + 1;
+    end
+end
 
+% triggers recevied == 551
 
+% triggers after LSL sync
+epoch_CGX32 = pop_epoch(exported_EEG,{'CGX32'},[0 ,2]);
+size(epoch_CGX32.data,3)
 
-
-
+% triggers received == 551
 
 %%
