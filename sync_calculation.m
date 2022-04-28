@@ -77,7 +77,31 @@ combine_triggers_2systems = combine_triggers_2systems(index); clear index %sort 
 exported_EEG.event = combine_triggers_2systems; %add to event struct
 exported_EEG.urevent = []; % remove urvent field
 exported_EEG = eeg_checkset(exported_EEG); % check set
-%%
+
+% remove obsolete triggers and rename existing once
+events_delete_list = [];
+
+for event =1:length(exported_EEG.event)
+    if strcmp('chan61',exported_EEG.event(event).type)
+        exported_EEG.event(event).type = 'CGX30';
+    elseif strcmp('<Marker><Type>Comment</Type><Description>M 32768<', exported_EEG.event(event).type)
+        exported_EEG.event(event).type = 'CGX32';
+    else
+        events_delete_list = [events_delete_list event];
+    end
+end
+exported_EEG.event(events_delete_list) = []; % remove 
+
+eegplot(exported_EEG.data,'srate',exported_EEG.srate,'eloc_file',exported_EEG.chanlocs,'events',exported_EEG.event);
+
+%% Step 1 - look at triggers latency in CGX32 - data collected via LSL and wireless local network
+
+% compare amount of events
+% triggers send == 596
+
+% triggers received == 
+
+
 
 
 
