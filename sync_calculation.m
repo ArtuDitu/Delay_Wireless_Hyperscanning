@@ -6,14 +6,15 @@ cd D:\Dropbox\Projects\BMK_Japan
 addpath(genpath('D:\Dropbox\Projects\BMK_Japan'))
 
 % path to file and folder
-path_to_file = 'D:\Dropbox\Projects\BMK_Japan\Data\test.xdf';
-path_new_folder = 'D:\Dropbox\Projects\BMK_Japan\Data\MOBI';
+path_to_file = 'D:\Dropbox\Projects\BMK_Japan\Data\XXX\test.xdf';
+path_new_folder = 'D:\Dropbox\Projects\BMK_Japan\Data\XXX\MOBI';
 
 % load EEG streams and combine them in one struct
 mobilab.allStreams = dataSourceXDF(path_to_file, path_new_folder);
 all_mobilab_streams = [mobilab.allStreams().item];
 
 % load triggers timing
+cd D:\Dropbox\Projects\BMK_Japan\Data\XXX\
 d = readtable('results.csv');
 
 %add triggers as channel 31 in CGX30quick system
