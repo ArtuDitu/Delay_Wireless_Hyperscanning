@@ -6,56 +6,76 @@ cd D:\Dropbox\Projects\BMK_Japan
 addpath(genpath('D:\Dropbox\Projects\BMK_Japan'))
 
 % path to file and folder
-path_to_file = 'D:\Dropbox\Projects\BMK_Japan\Data\XXX\test.xdf';
-path_new_folder = 'D:\Dropbox\Projects\BMK_Japan\Data\XXX\MOBI';
+path_to_file = 'D:\Dropbox\Projects\BMK_Japan\Data\test10\test.xdf';
+path_new_folder = 'D:\Dropbox\Projects\BMK_Japan\Data\test10\MOBI';
 
 % load EEG streams and combine them in one struct
 mobilab.allStreams = dataSourceXDF(path_to_file, path_new_folder);
 all_mobilab_streams = [mobilab.allStreams().item];
 
 % load triggers timing
-cd D:\Dropbox\Projects\BMK_Japan\Data\XXX\
+cd D:\Dropbox\Projects\BMK_Japan\Data\test10\
 d = readtable('results.csv');
 
 %add triggers as channel 31 in CGX30quick system
-triggers_CGX30 = zeros(length(all_mobilab_streams{1,3}.data(:,30)),1); % vector with zeros
-all_mobilab_streams{1,3}.data(:,31) = all_mobilab_streams{1,3}.auxChannel.data(:,4); %temporary store triggers signal as channel 31
-all_mobilab_streams{1,3}.label(31) = {'trigger'}; % add label name for trigger channel
-all_mobilab_streams{1,3}.channelSpace = NaN(31,3); % expand channelSpace - it's all empty now but size has to be consistent with data struct
+triggers_EEG1 = zeros(length(all_mobilab_streams{1,1}.data(:,30)),1); % vector with zeros
+all_mobilab_streams{1,1}.data(:,31) = all_mobilab_streams{1,1}.auxChannel.data(:,5); %temporary store triggers signal as channel 31
+all_mobilab_streams{1,1}.label(31) = {'trigger_eeg1'}; % add label name for trigger channel
+all_mobilab_streams{1,1}.channelSpace = NaN(31,3); % expand channelSpace - it's all empty now but size has to be consistent with data struct
+
+%add triggers as channel 31 in CGX30quick system
+triggers_EEG2 = zeros(length(all_mobilab_streams{1,2}.data(:,30)),1); % vector with zeros
+all_mobilab_streams{1,2}.data(:,31) = all_mobilab_streams{1,2}.auxChannel.data(:,5); %temporary store triggers signal as channel 31
+all_mobilab_streams{1,2}.label(31) = {'trigger_eeg2'}; % add label name for trigger channel
+all_mobilab_streams{1,2}.channelSpace = NaN(31,3); % expand channelSpace - it's all empty now but size has to be consistent with data struct
+
+%eeg1
+ts_list_eeg1 = find(all_mobilab_streams{1,1}.data(:,31)~=0); %find all events
+ts_list_unique_eeg1 = ts_list_eeg1; % empty list for unique events
+% for loop to remove all triggers that are repeated over consecutive
+% timestamps
+for idx = 2:length(ts_list_eeg1)
+     if (ts_list_eeg1(idx) - ts_list_eeg1(idx-1)) < 5
+         ts_list_unique_eeg1(idx)=0;
+     end
+ end
+ts_list_unique_eeg1 = unique(ts_list_unique_eeg1);
+ts_list_unique_eeg1 = ts_list_unique_eeg1(2:end);
+
+%eeg2
+ts_list_eeg2 = find(all_mobilab_streams{1,2}.data(:,31)~=0); %find all events
+ts_list_unique_eeg2 = ts_list_eeg2; % empty list for unique events
+% for loop to remove all triggers that are repeated over consecutive
+% timestamps
+for idx = 2:length(ts_list_eeg2)
+     if (ts_list_eeg2(idx) - ts_list_eeg2(idx-1)) < 5
+         ts_list_unique_eeg2(idx)=0;
+     end
+ end
+ts_list_unique_eeg2 = unique(ts_list_unique_eeg2);
+ts_list_unique_eeg2 = ts_list_unique_eeg2(2:end);
+
+
 
 % sync 2 eeg streams and markers
-exported_EEG = mobilab.allStreams().export2eeglab([1,3],[2]);
+exported_EEG = mobilab.allStreams().export2eeglab([1,2);
 
 % make events from channel 31 CGX30
-tmp_EEG = pop_chanevent(exported_EEG, 61,'edge','leading','edgelen',1.1,'nbtype',1); 
+tmp_EEG_1 = pop_chanevent(exported_EEG, 31,'edge','leading','edgelen',1.1,'nbtype',1);
+tmp_EEG_2 = pop_chanevent(exported_EEG, 62,'edge','leading','edgelen',1.1,'nbtype',1);
 
-% remove fields that overlap between two events streams
-tmp_EEG.event = rmfield(tmp_EEG.event, 'urevent');
-exported_EEG.event = rmfield(exported_EEG.event, 'urevent');
-exported_EEG.event = rmfield(exported_EEG.event, 'hedTag');
-exported_EEG.event = rmfield(exported_EEG.event, 'duration');
-% combine triggers
-combine_triggers_2systems = [exported_EEG.event tmp_EEG.event]; % combined array
-[~,index] = sortrows([combine_triggers_2systems.latency].'); % sort by latency
-combine_triggers_2systems = combine_triggers_2systems(index); clear index %sort by latency
+
+
+
+combine_triggers_2systems = [tmp_EEG_1.event tmp_EEG_2.event];
+
+
+% combined array
+[~,index] = sortrows([combine_triggers_2systems.latency].'); clear index
 exported_EEG.event = combine_triggers_2systems; %add to event struct
-exported_EEG.urevent = []; % remove urvent field
+
 
 exported_EEG = eeg_checkset(exported_EEG); % check set
-
-% remove obsolete triggers and rename existing once
-events_delete_list = [];
-
-for event =1:length(exported_EEG.event)
-    if strcmp('chan61',exported_EEG.event(event).type)
-        exported_EEG.event(event).type = 'CGX30';
-    elseif strcmp('<Marker><Type>Comment</Type><Description>M 32768<', exported_EEG.event(event).type)
-        exported_EEG.event(event).type = 'CGX32';
-    else
-        events_delete_list = [events_delete_list event];
-    end
-end
-exported_EEG.event(events_delete_list) = []; % remove 
 
 %eegplot(exported_EEG.data,'srate',exported_EEG.srate,'eloc_file',exported_EEG.chanlocs,'events',exported_EEG.event);
 
@@ -79,7 +99,7 @@ end
 % triggers received == 551
 
 % triggers after LSL sync
-epoch_CGX32 = pop_epoch(exported_EEG,{'CGX32'},[0 ,2]);
+epoch_CGX32 = pop_epoch(exported_EEG,{'CGX32'},[0 .2]);
 size(epoch_CGX32.data,3)
 
 % triggers received == 551

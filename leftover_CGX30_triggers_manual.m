@@ -37,3 +37,27 @@
 % ts_list = ts_list(2:end); % remove trigger #0
 % triggers_CGX30([ts_list]) = 1; % add triggers as '1' to the empty vector
 % all_mobilab_streams{1,3}.data(:,31) = triggers_CGX30; % add triggers to the channel 31
+
+
+
+% remove fields that overlap between two events streams
+tmp_EEG.event = rmfield(tmp_EEG.event, 'urevent');
+exported_EEG.event = rmfield(exported_EEG.event, 'urevent');
+exported_EEG.event = rmfield(exported_EEG.event, 'hedTag');
+exported_EEG.event = rmfield(exported_EEG.event, 'duration');
+% combine triggers
+
+
+% remove obsolete triggers and rename existing once
+events_delete_list = [];
+
+for event =1:length(exported_EEG.event)
+    if strcmp('chan61',exported_EEG.event(event).type)
+        exported_EEG.event(event).type = 'CGX30';
+    elseif strcmp('<Marker><Type>Comment</Type><Description>M 32768<', exported_EEG.event(event).type)
+        exported_EEG.event(event).type = 'CGX32';
+    else
+        events_delete_list = [events_delete_list event];
+    end
+end
+exported_EEG.event(events_delete_list) = []; % remove 
