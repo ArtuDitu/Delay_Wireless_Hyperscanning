@@ -58,7 +58,7 @@ ts_list_unique_eeg2 = ts_list_unique_eeg2(2:end);
 
 
 % sync 2 eeg streams and markers
-exported_EEG = mobilab.allStreams().export2eeglab([1,2);
+exported_EEG = mobilab.allStreams().export2eeglab([1,2]);
 
 % make events from channel 31 CGX30
 tmp_EEG_1 = pop_chanevent(exported_EEG, 31,'edge','leading','edgelen',1.1,'nbtype',1);
@@ -68,11 +68,9 @@ tmp_EEG_2 = pop_chanevent(exported_EEG, 62,'edge','leading','edgelen',1.1,'nbtyp
 
 
 combine_triggers_2systems = [tmp_EEG_1.event tmp_EEG_2.event];
-
-
-% combined array
-[~,index] = sortrows([combine_triggers_2systems.latency].'); clear index
-exported_EEG.event = combine_triggers_2systems; %add to event struct
+combine_triggers_2systems = rmfield(combine_triggers_2systems, 'urevent');
+combine_triggers_2systems = sortrows(struct2table(combine_triggers_2systems),1);
+exported_EEG.event = table2struct(combine_triggers_2systems); %add to event struct
 
 
 exported_EEG = eeg_checkset(exported_EEG); % check set
@@ -87,37 +85,6 @@ d{:,1}=d{:,1}+1;
 size(d,1)
 % triggers sent == 595
 
-% triggers before LSL sync
-CGX32_count= 0;
-CGXX32_markers = all_mobilab_streams{1,2};
-for event =1:length(CGXX32_markers.event.label)
-    if strcmp('<Marker><Type>Comment</Type><Description>M 32768<', CGXX32_markers.event.label{event,1})
-        CGX32_count = CGX32_count + 1;
-    end
-end
 
-% triggers received == 551
-
-% triggers after LSL sync
-epoch_CGX32 = pop_epoch(exported_EEG,{'CGX32'},[0 .2]);
-size(epoch_CGX32.data,3)
-
-% triggers received == 551
-
-%% Step 2 - look at triggers latency in CGX30 - data collected via LSL + cloud
-
-% triggers sent == 595
-
-%triggers_before LSL sync
-
-
-% triggers received == 595
-
-%triggers_after LSL sync
-epoch_CGX30 = pop_epoch(exported_EEG,{'CGX30'},[0 ,2]);
+epoch_CGX30 = pop_epoch(exported_EEG,{'chan62'},[0 ,2]);
 size(epoch_CGX30.data,3)
-% triggers received == 587
-
-
-
-
