@@ -6,15 +6,15 @@ cd D:\Dropbox\Projects\BMK_Japan
 addpath(genpath('D:\Dropbox\Projects\BMK_Japan'))
 
 % path to file and folder
-path_to_file = 'D:\Dropbox\Projects\BMK_Japan\Data\test10\test.xdf';
-path_new_folder = 'D:\Dropbox\Projects\BMK_Japan\Data\test10\MOBI';
+path_to_file = 'D:\Dropbox\Projects\BMK_Japan\Data\test11\test.xdf';
+path_new_folder = 'D:\Dropbox\Projects\BMK_Japan\Data\test11\MOBI';
 
 % load EEG streams and combine them in one struct
 mobilab.allStreams = dataSourceXDF(path_to_file, path_new_folder);
 all_mobilab_streams = [mobilab.allStreams().item];
 
 % load triggers timing
-cd D:\Dropbox\Projects\BMK_Japan\Data\test10\
+cd D:\Dropbox\Projects\BMK_Japan\Data\test11\
 d = readtable('results.csv');
 
 %add triggers as channel 31 in CGX30quick system
@@ -57,23 +57,23 @@ ts_list_unique_eeg2 = ts_list_unique_eeg2(2:end);
 
 
 
-% sync 2 eeg streams and markers
-exported_EEG = mobilab.allStreams().export2eeglab([1,2]);
+    % sync 2 eeg streams and markers
+    exported_EEG = mobilab.allStreams().export2eeglab([1,2]);
 
-% make events from channel 31 CGX30
-tmp_EEG_1 = pop_chanevent(exported_EEG, 31,'edge','leading','edgelen',1.1,'nbtype',1);
-tmp_EEG_2 = pop_chanevent(exported_EEG, 62,'edge','leading','edgelen',1.1,'nbtype',1);
-
-
+    % make events from channel 31 CGX30
+    tmp_EEG_1 = pop_chanevent(exported_EEG, 31,'edge','leading','edgelen',1.1,'nbtype',1);
+    tmp_EEG_2 = pop_chanevent(exported_EEG, 62,'edge','leading','edgelen',1.1,'nbtype',1);
 
 
-combine_triggers_2systems = [tmp_EEG_1.event tmp_EEG_2.event];
-combine_triggers_2systems = rmfield(combine_triggers_2systems, 'urevent');
-combine_triggers_2systems = sortrows(struct2table(combine_triggers_2systems),1);
-exported_EEG.event = table2struct(combine_triggers_2systems); %add to event struct
 
 
-exported_EEG = eeg_checkset(exported_EEG); % check set
+    combine_triggers_2systems = [tmp_EEG_1.event tmp_EEG_2.event];
+    combine_triggers_2systems = rmfield(combine_triggers_2systems, 'urevent');
+    combine_triggers_2systems = sortrows(struct2table(combine_triggers_2systems),1);
+    exported_EEG.event = table2struct(combine_triggers_2systems); %add to event struct
+
+
+    exported_EEG = eeg_checkset(exported_EEG); % check set
 
 %eegplot(exported_EEG.data,'srate',exported_EEG.srate,'eloc_file',exported_EEG.chanlocs,'events',exported_EEG.event);
 
@@ -86,5 +86,35 @@ size(d,1)
 % triggers sent == 595
 
 
-epoch_CGX30 = pop_epoch(exported_EEG,{'chan62'},[0 ,2]);
-size(epoch_CGX30.data,3)
+%epoch_CGX30 = pop_epoch(exported_EEG,{'chan62'},[0 ,2]);
+
+%% sync between sent and received
+
+% calculate difference between latencies of the same triggers in both
+% systems (chan31 and chan62)
+mean(abs(([tmp_EEG_1.event.latency]/500) - ([tmp_EEG_2.event.latency]/500)))*1000
+std(abs(([tmp_EEG_1.event.latency]/500) - ([tmp_EEG_2.event.latency]/500)))*1000
+
+
+% calculate difference between every next trigger (sent)
+mean(diff(d{:,2}))*1000
+std(diff(d{:,2}))*1000
+
+% calculate difference between every next trigger (chan31)
+mean(diff(([tmp_EEG_1.event.latency]/500)'))*1000
+std(diff(([tmp_EEG_1.event.latency]/500)'))*1000
+
+% calculate difference between every next trigger (chan62)
+mean(diff(([tmp_EEG_2.event.latency]/500)'))*1000
+std(diff(([tmp_EEG_2.event.latency]/500)'))*1000
+
+
+% calculate difference between sent and chan31
+mean(abs(diff(d{:,2}) - diff(([tmp_EEG_1.event.latency]/500)'))) *1000
+std(abs(diff(d{:,2}) - diff(([tmp_EEG_1.event.latency]/500)'))) *1000
+
+% calculate difference between sent and chan62
+mean(abs(diff(d{:,2}) - diff(([tmp_EEG_2.event.latency]/500)'))) *1000
+std(abs(diff(d{:,2}) - diff(([tmp_EEG_2.event.latency]/500)'))) *1000
+
+
