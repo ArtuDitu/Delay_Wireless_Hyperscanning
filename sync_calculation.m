@@ -6,15 +6,15 @@ cd D:\Dropbox\Projects\BMK_Japan
 addpath(genpath('D:\Dropbox\Projects\BMK_Japan'))
 
 % path to file and folder
-path_to_file = 'D:\Dropbox\Projects\BMK_Japan\Data\test11\test.xdf';
-path_new_folder = 'D:\Dropbox\Projects\BMK_Japan\Data\test11\MOBI';
+path_to_file = 'D:\Dropbox\Projects\BMK_Japan\Data\test15\test.xdf';
+path_new_folder = 'D:\Dropbox\Projects\BMK_Japan\Data\test15\MOBI';
 
 % load EEG streams and combine them in one struct
 mobilab.allStreams = dataSourceXDF(path_to_file, path_new_folder);
 all_mobilab_streams = [mobilab.allStreams().item];
 
 % load triggers timing
-cd D:\Dropbox\Projects\BMK_Japan\Data\test11\
+cd D:\Dropbox\Projects\BMK_Japan\Data\test1\
 d = readtable('results.csv');
 
 %add triggers as channel 31 in CGX30quick system
@@ -61,9 +61,12 @@ ts_list_unique_eeg2 = ts_list_unique_eeg2(2:end);
     exported_EEG = mobilab.allStreams().export2eeglab([1,2]);
 
     % make events from channel 31 CGX30
-    tmp_EEG_1 = pop_chanevent(exported_EEG, 31,'edge','leading','edgelen',1.1,'nbtype',1);
-    tmp_EEG_2 = pop_chanevent(exported_EEG, 62,'edge','leading','edgelen',1.1,'nbtype',1);
+    tmp_EEG_1 = pop_chanevent(exported_EEG, 31,'edge','leading','edgelen',1.1, 'nbtype',1);
+    tmp_EEG_2 = pop_chanevent(exported_EEG, 62,'edge','leading','edgelen',1.1, 'nbtype',1);
 
+
+    %tmp_EEG_1 = pop_editeventvals(tmp_EEG_1,'delete',[308 109]);
+    %manually remove randomly appearing events with different names
 
 
 
@@ -86,7 +89,7 @@ size(d,1)
 % triggers sent == 595
 
 
-%epoch_CGX30 = pop_epoch(exported_EEG,{'chan62'},[0 ,2]);
+epoch_CGX30 = pop_epoch(exported_EEG,{'chan62'},[0 ,2]);
 
 %% sync between sent and received
 
