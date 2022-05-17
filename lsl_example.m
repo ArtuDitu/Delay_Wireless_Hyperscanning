@@ -13,19 +13,16 @@ disp('Opening an inlet...');
 inlet = lsl_inlet(result{1});
 
 disp('Now receiving chunked data...');
+chunks=[];
+lsl_stamps = [];
+clock_stamps = [];
 tic;
 t=toc;
-chunks=[];
-lslStamps = [];
-clockStamps = [];
 while t < 60
     % get chunk from the inlet
-    [chunk,stamps] = inlet.pull_chunk();
-    chunks=[chunks chunk];
-    lslStamps = [lslStamps stamps];
-    clockStamps =[clockStamps clock];
+    [chunk,stamps] = inlet.pull_sample();
+    chunks=[chunks chunk'];
+    lsl_stamps = [lsl_stamps stamps];
+    clock_stamps = [clock_stamps {clock}];
     t=toc;
 end
-
-
-c = clock;
